@@ -1,0 +1,54 @@
+<div id="app">
+    <h2>{{title}}</h2>
+
+    <input id="newTask"/>&nbsp;
+    <button @click="addNewTask()">Add task</button>
+    <ul v-for="task in tasks">
+        <li>{{task.description}}</li>&nbsp;
+        <button @click="deleteTask(task.id)">Delete task</button>
+    </ul>
+
+</div>
+
+<script src="firebaseConfig.js">
+</script>
+
+<script type="module">
+    import {createApp} from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js'
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+    import { getFirestore, getDocs, collection, addDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app)
+
+    createApp({
+        data() {
+            return {
+                title: 'TODO APP',
+                tasks: []
+            }
+        },
+        methods: {
+            async updateData() {
+                this.tasks = []
+                let querySnapshot = await getDocs(collection(db, "tasks"))
+                querySnapshot.forEach((doc) => {
+                    this.tasks.push({description:doc.data().description, id:doc.id})
+                });
+                console.log(this.tasks)
+            },
+            async addNewTask() {
+                const newTask = document.getElementById("newTask").value
+                await addDoc(collection(db, 'tasks'), {description: newTask})
+                this.updateData()
+            },
+            async deleteTask(id) {
+                await deleteDoc(doc(db, 'tasks', id))
+                this.updateData()
+            }
+        },
+        mounted: function () {
+            this.updateData()
+        }
+    }).mount('#app')
+</script>
